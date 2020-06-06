@@ -10,10 +10,10 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.layers import Bidirectional, LSTM, Dense, Embedding, TimeDistributed
 
 # 创建模型
-def create_Bi_LSTM(vocab_size, label_size, input_shape, output_dim, n_units, out_act, activation):
+def create_Bi_LSTM(vocab_size, label_size, input_shape, output_dim, n_units):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size + 1, output_dim=output_dim, input_length=input_shape, mask_zero=True))
-    model.add(Bidirectional(LSTM(units=n_units, activation=activation,return_sequences=True)))
+    model.add(Bidirectional(LSTM(units=n_units, activation='selu',return_sequences=True)))
     model.add(TimeDistributed(Dense(label_size + 1, activation='sigmoid')))
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
@@ -35,6 +35,7 @@ def model_train():
     vocab_size = len(word_dictionary.keys())
     label_size = len(label_dictionary.keys())
 
+    print(label_dictionary)
     # 处理输入数据
     aggregate_function = lambda input: [(word, pos, label) for word, pos, label in
                                         zip(input['word'].values.tolist(),
@@ -55,15 +56,13 @@ def model_train():
     test_x, test_y = x[train_end:], np.array(y[train_end:])
 
     #输入参数
-    activation = 'selu'
-    out_act = 'softmax'
     n_units = 100
     batch_size = 32
     epochs = 10
     output_dim = 20
 
     # 模型训练
-    lstm_model = create_Bi_LSTM(vocab_size, label_size, input_shape, output_dim, n_units, out_act, activation)
+    lstm_model = create_Bi_LSTM(vocab_size, label_size, input_shape, output_dim, n_units)
     lstm_model.fit(train_x, train_y, epochs=epochs, batch_size=batch_size, verbose=1)
 
     # 模型保存
